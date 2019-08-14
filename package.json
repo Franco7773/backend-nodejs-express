@@ -1,0 +1,18 @@
+{
+  "name": "backend-server",
+  "version": "1.0.0",
+  "description": "Agatta",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "author": "Gianfranco D'Onofrio",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.6.9"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
