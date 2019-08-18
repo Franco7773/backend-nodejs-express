@@ -8,6 +8,7 @@ exports.verificaToken = function(req, res, next) {
   jwt.verify(token, SEED, (err, decoded) => {
     if (err) res.status(401).json({ ok: false, msg: 'Token no válido', errors: err });
 
+    decoded.usuario.password = '=)';
     req.usuario = decoded.usuario;
     // res.json({
     //   ok: true,

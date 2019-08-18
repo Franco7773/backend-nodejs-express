@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const serveIndex = require('serve-index');
 
 const app = express();
 
@@ -8,8 +9,11 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// Server index config
+// app.use(express.static(__dirname + '/'));
+// app.use('/uploads', serveIndex(__dirname + '/uploads'));
+
 // Routes
-// const appRoutes = 
 app.use(require('./routes/routes'));
 
 mongoose.connection.openUri('mongodb://localhost:27017/ClinicDB', (err, res) => {
