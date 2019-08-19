@@ -23,10 +23,10 @@ let usuarioSchema = new Schema({
   },
   role: {
     type: String, required: true, default: 'USER_ROLE', enum: rolesValidos
-  }// ,
-  // google: {
-  //   type: Boolean
-  // }
+  },
+  google: {
+    type: Boolean, default: false
+  }
 });
 
 usuarioSchema.plugin( uniqueValidator, { message: '{PATH} debe de ser único' } );
