@@ -1,9 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const verificaToken = require('../middlewares/authentication').verificaToken;
+const verify = require('../middlewares/adminGuard');
 
 const app = express();
-
 
 const Usuario = require('../models/usuario');
 
@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
   const desde = Number(req.query.desde) || 0,
         hasta = Number(req.query.hasta) || 5;
 
-  Usuario.find({ }, 'nombre email img role').skip(desde).limit(hasta).exec((err, usuarios) => {
+  Usuario.find({ }, 'nombre email img role google').skip(desde).limit(hasta).exec( (err, usuarios) => {
 
     if (err) res.status(500).json({ ok: false, msg: 'Error cargando usuarios', errors: err });
 
@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 
 
 // ******************************* ACTUALIZAR USUARIOS ******************************************
-app.put('/:id', verificaToken, (req, res) => {
+app.put('/:id', [verificaToken, verify.verificaMismoUsuario], (req, res) => {
 
   const id = req.params.id
   const { nombre, email, role } = req.body;
@@ -51,7 +51,7 @@ app.put('/:id', verificaToken, (req, res) => {
     usuarioDB.save( (err, usuarioGuardado) => {
       if (err) res.status(400).json({ ok: false, msg: 'Error al actualizar usuario', errors: err });
 
-      usuarioGuardado.password = '=)';
+      usuarioGuardado.password = '=(';
       
       res.json({
         ok: true,
@@ -64,7 +64,7 @@ app.put('/:id', verificaToken, (req, res) => {
 
 
 // ******************************* CREAR USUARIOS ***********************************************
-app.post('/', verificaToken, (req, res) => {
+app.post('/', (req, res) => {
   
   req.body.password = bcrypt.hashSync(req.body.password, 11);
   const usuario = new Usuario( { nombre, email, password, img, role } = req.body );
@@ -81,7 +81,7 @@ app.post('/', verificaToken, (req, res) => {
 
 
 // ******************************* ELIMINAR USUARIOS ***********************************************
-app.delete('/:id', verificaToken, (req, res) => {
+app.delete('/:id', [verificaToken, verify.verificaAdmin], (req, res) => {
 
   const id = req.params.id;
   

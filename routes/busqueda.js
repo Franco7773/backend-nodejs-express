@@ -54,7 +54,7 @@ app.get('/coleccion/:tabla/:buscar', (req, res) => {
 function buscarClinicas( regExp) {
   return new Promise( (resolve, reject) => {
 
-    Clinica.find({ nombre: regExp }).populate('usuario', 'nombre email').exec((err, clinicasDB) => {
+    Clinica.find({ nombre: regExp }).populate('usuario', 'nombre email img').exec((err, clinicasDB) => {
       if (err) reject('Error al buscar las clinicas', err);
       else if (!clinicasDB) reject('La clinica no existe');
       else resolve(clinicasDB);
@@ -65,7 +65,7 @@ function buscarClinicas( regExp) {
 function buscarMedicos( regExp ) {
   return new Promise( (resolve, reject) => {
 
-    Medico.find({ nombre: regExp }).populate('usuario', 'nombre email').populate('clinica').exec((err, medicosDB) => {
+    Medico.find({ nombre: regExp }).populate('usuario', 'nombre email img').populate('clinica').exec((err, medicosDB) => {
       if (err) reject('Error al buscar los medicos', err)
       else if (!medicosDB) reject('El médico no existe')
       else resolve( medicosDB );
@@ -76,7 +76,7 @@ function buscarMedicos( regExp ) {
 function buscarUsuarios( regExp ) {
   return new Promise( (resolve, reject) => {
     
-    Usuario.find({}, 'nombre email role').or( [{ nombre: regExp}, { email: regExp }] ).exec( (err, usuariosDB) => {
+    Usuario.find({}, 'nombre email img role').or( [{ nombre: regExp}, { email: regExp }] ).exec( (err, usuariosDB) => {
       if (err) reject('Error al buscar los usuarios', err)
       else if (!usuariosDB) reject('El usuario no existe')
       else resolve(usuariosDB);

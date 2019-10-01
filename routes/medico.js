@@ -4,7 +4,6 @@ const verificaToken = require('../middlewares/authentication').verificaToken;
 const app = express();
 
 const Medico = require('../models/medico');
-const Clinica = require('../models/clinica');
 
 
 app.get('/', (req, res) => {
@@ -12,7 +11,7 @@ app.get('/', (req, res) => {
   const desde = Number(req.query.desde) || 0,
         hasta = Number(req.query.hasta) || 5;
 
-  Medico.find({ }).populate('usuario', 'nombre email').populate('clinica').skip(desde).limit(hasta).exec((err, medicosDB) => {
+  Medico.find({}).populate('usuario', 'nombre email').populate('clinica', 'nombre img').skip(desde).limit(hasta).exec((err, medicosDB) => {
     if (err) res.status(500).json({ ok: false, msg: 'Error al buscar medicos', errors: err });
 
     Medico.count({}, (err, conteo) => {
@@ -21,8 +20,25 @@ app.get('/', (req, res) => {
       res.json({
         ok: true,
         medicos: medicosDB,
-        toal: conteo
+        total: conteo
       });
+    });
+  });
+});
+
+
+
+app.get('/:id', (req, res) => {
+
+  const id = req.params.id;
+
+  Medico.findById( id ).populate('usuario', 'nombre email img').populate('clinica', 'nombre img').exec( (err, medico) => {
+    if (err) res.status(500).json({ ok: false, msg: 'Error al obtener médico', Errors: err });
+    if (!medico) res.status(400).json({ ok: false, msg: `El médico con el ID: ${ id } no existe` });
+
+    res.json({
+      ok: true,
+      medico
     });
   });
 });
@@ -32,34 +48,25 @@ app.get('/', (req, res) => {
 app.put('/:id', verificaToken, (req, res) => {
 
   const id = req.params.id;
-  let { nombre, clinica } = req.body;
+  const { nombre, clinica } = req.body;
 
   Medico.findById( id, (err, medicoDB) => {
     if (err) res.status(500).json({ ok: false, msg: 'Error al actualizar medico', errors: err });
-
     if (!medicoDB) res.status(400).json({ ok: false, msg: `El medico con ID ${ id } no existe` });
-
-    Clinica.find({ nombre: clinica }, (err, clinicaDB) => {
-      if (err) res.status(500).json({ ok: false, msg: 'Error al buscar clinica', errors: err });
-
-      if (!clinicaDB) res.status(400).json({ ok: false, msg: `La clinica ${ clinica } no fue localizada` });
-
-      clinica = clinicaDB[0]._id;
       
-      medicoDB.nombre = nombre;
-      medicoDB.usuario = req.usuario._id;
-      medicoDB.clinica = clinica;
+    medicoDB.nombre = nombre;
+    medicoDB.usuario = req.usuario._id;
+    medicoDB.clinica = clinica;
 
-      medicoDB.save( (err, medicoModificado) => {
-        if (err) res.status(500).json({ ok: false, msg: 'Error al intentar modificar medico', errors: err });
+    medicoDB.save( (err, medicoModificado) => {
+      if (err) res.status(500).json({ ok: false, msg: 'Error al intentar modificar medico', errors: err });
 
-        if (!medicoModificado) res.status(400).json({ ok: false, msg: `Error al guardar medico con ID ${ id } en DB` });
-        
-        res.json({
-          ok: true,
-          medico: medicoModificado,
-          solicitadoPor: req.usuario
-        });
+      if (!medicoModificado) res.status(400).json({ ok: false, msg: `Error al guardar medico con ID ${ id } en DB` });
+      
+      res.json({
+        ok: true,
+        medico: medicoModificado,
+        solicitadoPor: req.usuario
       });
     });
   });
@@ -70,28 +77,25 @@ app.put('/:id', verificaToken, (req, res) => {
 app.post('/', verificaToken, (req, res) => {
 
   const usuario = req.usuario._id;
-  let { nombre, clinica } = req.body;
+  const { nombre, clinica } = req.body;
+  console.log(req.usuario );
 
-  Clinica.find({ nombre: clinica }, (err, clinicaDB) => {
-    if (err) res.status(400).json({ ok: false, msg: 'Error al buscar clinica', errors: err });
+  const medico = new Medico({
+    nombre,
+    usuario,
+    clinica
+  });
 
-    clinica = clinicaDB[0]._id;
+  medico.save( (err, medicoGuardado) => {
+    console.log(usuario + ' ' + err);
+    if (err) res.status(500).json({ ok: false, msg: 'Error al intentar crear medico', errors: err });
+    if (!medicoGuardado) res.status(400).json({ ok: false, msg: `No se pudo crear al medico ${ nombre }` });
 
-    // return res.json({ id: clinicaDB[0]._id });
-
-    const medico = new Medico({ nombre, usuario, clinica });
-
-    medico.save( (err, medicoGuardado) => {
-      if (err) res.status(500).json({ ok: false, msg: 'Error al intentar crear medico', errors: err });
-
-      if (!medicoGuardado) res.status(400).json({ ok: false, msg: `No se pudo crear al medico ${ nombre }` });
-
-      res.status(201).json({
-        ok: true,
-        msg: 'Medico creado exitosamente',
-        medico: medicoGuardado,
-        solicitadoPor: req.usuario
-      });
+    res.status(201).json({
+      ok: true,
+      msg: 'Medico creado exitosamente',
+      medico: medicoGuardado,
+      solicitadoPor: req.usuario
     });
   });
 });

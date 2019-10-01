@@ -1,5 +1,4 @@
 const express = require('express');
-
 const verificaToken = require('../middlewares/authentication').verificaToken;
 
 const app = express();
@@ -10,10 +9,10 @@ const Clinica = require('../models/clinica');
 
 app.get('/', (req, res) => {
 
-  const desde = req.query.desde || 0,
-        hasta = req.query.hasta || 5;
+  const desde = Number(req.query.desde) || 0,
+        hasta = Number(req.query.hasta) || 5;
 
-  Clinica.find({}).populate('usuario', 'nombre email').skip(desde).limit(hasta).exec( (err, clinicasDB) => {
+  Clinica.find({ }).populate('usuario', 'nombre email').skip(desde).limit(hasta).exec( (err, clinicasDB) => {
 
     if (err) res.status(500).json({ ok: false, msg: 'Error al tratar de encontrar clinicas', errors: err });
 
@@ -31,9 +30,27 @@ app.get('/', (req, res) => {
 
 
 
+app.get('/:id', (req, res) => {
+
+  const id = req.params.id;
+  console.log('Este es el ID de clinica: ' + id);
+  Clinica.findById( id ).populate('usuario', 'nombre img email').exec( (err, clinicaDB) => {
+    if (err) res.status(500).json({ ok: false, msg: 'Error al buscar clinica', Errors: err });
+    if (!clinicaDB) res.status(400).json({ ok: false, msg: `La clinica con el ID: ${ id }, no existe` });
+
+    res.json({
+      ok: true,
+      clinica: clinicaDB
+    });
+  });
+});
+
+
+
 app.put('/:id', verificaToken, (req, res) => {
 
   const id = req.params.id;
+  const { nombre } = req.body;
 
   Clinica.findById( id, (err, clinicaDB) => {
 
@@ -41,7 +58,7 @@ app.put('/:id', verificaToken, (req, res) => {
 
     if (!clinicaDB) res.status(400).json({ ok: false, msg: `No se encontro la clinica ${ id }` })
 
-    clinicaDB.nombre = req.body.nombre;
+    clinicaDB.nombre = nombre;
     clinicaDB.usuario = req.usuario._id;
 
     clinicaDB.save( (err, clinicaActualizada) => {
